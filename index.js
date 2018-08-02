@@ -1,11 +1,8 @@
 "use strict";
 
-const net = require("net");
 const dnsSocket = require("dns-socket");
-const socket = dnsSocket();
 
-const resolve = ({name, server, port}) => {
-  console.log("resolve", name);
+const resolve = ({name, socket, server, port}) => {
   return new Promise(resolve => {
     socket.query({questions: [{name, type: "CAA"}]}, port, server, (_, res) => {
       if (res && res.answers && res.answers.length && res.answers[0].data) {
@@ -24,15 +21,11 @@ module.exports = async (name, opts = {}) => {
 
   // obtain server from options or system
   let server;
-  if (opts.server && net.isIP(server)) {
+  if (opts.server) {
     server = opts.server;
   } else {
     const servers = require("dns").getServers();
-    if (servers || servers[0]) {
-      server = servers[0];
-    } else {
-      server = "8.8.8.8";
-    }
+    server = (servers && servers[0]) ? servers[0] : "8.8.8.8";
   }
 
   const port = opts.port || 53;
@@ -44,12 +37,16 @@ module.exports = async (name, opts = {}) => {
 
   // climb up the DNS name tree
   let caa;
+  const socket = dnsSocket();
+
   while (name && !caa) {
     try {
-      caa = await resolve({name, server, port});
+      caa = await resolve({name, socket, server, port});
     } catch (err) {}
     name = name.split(".").splice(1).join(".");
   }
+
+  socket.destroy();
 
   return caa || null;
 };
