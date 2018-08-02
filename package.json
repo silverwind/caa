@@ -1,6 +1,6 @@
 {
   "name": "caa",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "rfc6844-conform CAA record lookup",
   "author": "silverwind <me@silverwind.io>",
   "repository": "silverwind/caa",
