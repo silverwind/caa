@@ -43,9 +43,10 @@ const resolve = async ({name, socket, server, port}) => {
     }
   }
 
-  // If X is not a top-level domain, then R(X) = R(P(X))
-  if (name.split(".").length > 1) {
-    const parent = name.split(".").splice(1).join(".");
+  // If X is not a top-level domain, then R(X) = R(P(X)
+  const parts = name.split(".");
+  if (parts.length > 1) {
+    const parent = parts.splice(1).join(".");
     return await resolve({name: parent, socket, server, port});
   } else {
     return [];
