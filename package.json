@@ -21,10 +21,10 @@
     "certificate authority"
   ],
   "dependencies": {
-    "dns-socket": "^4.1.0"
+    "dns-socket": "^4.1.1"
   },
   "devDependencies": {
-    "eslint": "^5.2.0",
+    "eslint": "^5.3.0",
     "eslint-config-silverwind": "^1.0.45",
     "updates": "^4.1.2"
   }
