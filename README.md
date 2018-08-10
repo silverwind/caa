@@ -14,10 +14,10 @@ npm i caa
 ```js
 const caa = require('caa');
 
-console.log(await caa('subdomain.example.com'));
+caa('subdomain.example.com').then(console.log);
 // => [{flags: 0, tag: 'issue', tag: 'issue', value: 'letsencrypt.org', issuerCritical: false}]
 
-console.log(await caa.matches('subdomain.example.com', 'letsencrypt.org'));
+caa.matches('subdomain.example.com', 'letsencrypt.org').then(console.log);
 // => true
 
 ```
