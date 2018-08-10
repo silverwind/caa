@@ -16,6 +16,16 @@ function parseAnswers(res) {
   return Object.keys(types).length ? types : null;
 }
 
+// normalize a DNS name
+function normalize(name) {
+  name = (name || "").toLowerCase();
+  if (name.endsWith(".") && name.length > 1) {
+    name = name.substring(0, name.length - 1);
+  }
+  return name;
+}
+
+// resolve a CAA record, possibly via recursion
 const resolve = async ({name, socket, server, port}) => {
   const query = util.promisify(socket.query.bind(socket));
 
@@ -53,12 +63,11 @@ const resolve = async ({name, socket, server, port}) => {
   }
 };
 
-module.exports = async (name, opts = {}) => {
+const caa = module.exports = async (name, opts = {}) => {
   if (typeof name !== "string") {
     throw new Error("Expected a string");
   }
 
-  // obtain server from options or system
   let server;
   if (opts.server) {
     server = opts.server;
@@ -67,16 +76,26 @@ module.exports = async (name, opts = {}) => {
     server = (servers && servers[0]) ? servers[0] : "8.8.8.8";
   }
 
-  const port = opts.port || 53;
-
-  // trim trailing dot if present
-  if (name.endsWith(".")) {
-    name = name.substring(0, name.length - 1);
-  }
-
-  // climb up the DNS name tree
+  name = normalize(name);
   const socket = dnsSocket();
+  const port = opts.port || 53;
   const caa = await resolve({name, socket, server, port});
   socket.destroy();
   return caa || [];
+};
+
+caa.matches = async (name, ca, opts = {}) => {
+  const caas = await caa(name, opts);
+
+  if (!caas.length) {
+    return true;
+  }
+
+  const names = caas.filter(caa => caa && caa.tag === "issue").map(name => normalize(name.value));
+
+  if (names.includes(";")) {
+    return false;
+  }
+
+  return !names.length || names.includes(normalize(ca));
 };
