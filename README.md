@@ -15,7 +15,7 @@ npm i caa
 const caa = require('caa');
 
 await caa('subdomain.example.com');
-// => [{flags: 0, tag: 'issue', tag: 'issue', value: 'letsencrypt.org', issuerCritical: false}]
+// => [{flags: 0, tag: 'issue', value: 'letsencrypt.org', issuerCritical: false}]
 
 await caa.matches('subdomain.example.com', 'letsencrypt.org');
 // => true
