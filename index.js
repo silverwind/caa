@@ -26,9 +26,7 @@ function normalize(name) {
 }
 
 // resolve a CAA record, possibly via recursion
-const resolve = async ({name, socket, server, port}) => {
-  const query = util.promisify(socket.query.bind(socket));
-
+const resolve = async ({name, query, server, port}) => {
   const [cname, dname, caa] = await Promise.all([
     query({questions: [{name, type: "CNAME"}]}, port, server).then(parseAnswers).catch(noop),
     query({questions: [{name, type: "DNAME"}]}, port, server).then(parseAnswers).catch(noop),
@@ -57,7 +55,7 @@ const resolve = async ({name, socket, server, port}) => {
   const parts = name.split(".");
   if (parts.length > 1) {
     const parent = parts.splice(1).join(".");
-    return await resolve({name: parent, socket, server, port});
+    return await resolve({name: parent, query, server, port});
   } else {
     return [];
   }
@@ -78,8 +76,9 @@ const caa = module.exports = async (name, opts = {}) => {
 
   name = normalize(name);
   const socket = dnsSocket();
+  const query = util.promisify(socket.query.bind(socket));
   const port = opts.port || 53;
-  const caa = await resolve({name, socket, server, port});
+  const caa = await resolve({name, query, server, port});
   socket.destroy();
   return caa || [];
 };
