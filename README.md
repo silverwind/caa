@@ -14,10 +14,10 @@ npm i caa
 ```js
 const caa = require('caa');
 
-caa('subdomain.example.com').then(console.log);
+await caa('subdomain.example.com');
 // => [{flags: 0, tag: 'issue', tag: 'issue', value: 'letsencrypt.org', issuerCritical: false}]
 
-caa.matches('subdomain.example.com', 'letsencrypt.org').then(console.log);
+await caa.matches('subdomain.example.com', 'letsencrypt.org');
 // => true
 
 ```
@@ -28,13 +28,13 @@ caa.matches('subdomain.example.com', 'letsencrypt.org').then(console.log);
 
 Retrieve the CAA records which apply to the given `name`. Returns a [`CAA` object](https://github.com/mafintosh/dns-packet/#caa).
 
-### caa(name, ca, {server, port})
+### caa.matches(name, ca, {server, port})
 
 Test if the CAA record for a given `name` matches a given `ca`.
 
 #### Options
 
-Optionally, a DNS `server` and `port` can be supplied, defaulting to the first system resolver and port 53.
+Optionally, a DNS `server` and `port` can be supplied, defaulting to the first system resolver (or `8.8.8.8` if none is configured) and port 53.
 
 ## License
 
