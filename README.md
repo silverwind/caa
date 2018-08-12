@@ -24,17 +24,20 @@ await caa.matches('subdomain.example.com', 'letsencrypt.org');
 
 ## API
 
-### caa(name, {server, port})
+### caa(name, [opts])
 
 Retrieve the CAA records which apply to the given `name`. Returns a [`CAA` object](https://github.com/mafintosh/dns-packet/#caa).
 
-### caa.matches(name, ca, {server, port})
+### caa.matches(name, ca, [opts])
 
 Test if the CAA record for a given `name` matches a given `ca`.
 
 #### Options
 
-Optionally, a DNS `server` and `port` can be supplied, defaulting to the first system resolver (or `8.8.8.8` if none is configured) and port 53.
+- `server`: The DNS server to use. Defaults to the first system resolver or `8.8.8.8` if none is configured).
+- `port`: The port on the DNS server to use. Defaults to port 53.
+- `ignoreCNAME`: Don't issue CNAME queries.
+- `ignoreDNAME`: Don't issue DNAME queries.
 
 ## License
 

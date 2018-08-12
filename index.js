@@ -26,12 +26,31 @@ function normalize(name) {
 }
 
 // resolve a CAA record, possibly via recursion
-const resolve = async ({name, query, server, port}) => {
-  const [cname, dname, caa] = await Promise.all([
-    query({questions: [{name, type: "CNAME"}]}, port, server).then(parseAnswers).catch(noop),
-    query({questions: [{name, type: "DNAME"}]}, port, server).then(parseAnswers).catch(noop),
-    query({questions: [{name, type: "CAA"}]}, port, server).then(parseAnswers).catch(noop),
-  ]);
+const resolve = async ({name, query, server, port, opts}) => {
+  const todo = [
+    query({questions: [{name, type: "CAA"}]}, port, server).then(parseAnswers).catch(noop)
+  ];
+
+  if (!opts.ignoreCNAME) {
+    todo.push(query({questions: [{name, type: "CNAME"}]}, port, server).then(parseAnswers).catch(noop));
+  }
+
+  if (!opts.ignoreDNAME) {
+    todo.push(query({questions: [{name, type: "DNAME"}]}, port, server).then(parseAnswers).catch(noop));
+  }
+
+  const res = await Promise.all(todo);
+
+  const caa = res[0];
+  let cname, dname;
+  if (!opts.ignoreCNAME && !opts.ignoreDNAME) {
+    cname = res[1];
+    dname = res[2];
+  } else if (opts.ignoreCNAME && !opts.ignoreDNAME) {
+    dname = res[1];
+  } else if (opts.ignoreDNAME && !opts.ignoreCNAME) {
+    cname = res[2];
+  }
 
   // If CAA(X) is not empty, R(X) = CAA (X)
   let alias;
@@ -55,7 +74,7 @@ const resolve = async ({name, query, server, port}) => {
   const parts = name.split(".");
   if (parts.length > 1) {
     const parent = parts.splice(1).join(".");
-    return await resolve({name: parent, query, server, port});
+    return await resolve({name: parent, query, server, port, opts});
   } else {
     return [];
   }
@@ -78,7 +97,7 @@ const caa = module.exports = async (name, opts = {}) => {
   const socket = dnsSocket();
   const query = util.promisify(socket.query.bind(socket));
   const port = opts.port || 53;
-  const caa = await resolve({name, query, server, port});
+  const caa = await resolve({name, query, server, port, opts});
   socket.destroy();
   return caa || [];
 };
