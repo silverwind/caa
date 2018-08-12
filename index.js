@@ -27,6 +27,10 @@ function normalize(name) {
 
 // resolve a CAA record, possibly via recursion
 const resolve = async ({name, query, server, port, opts}) => {
+  if (opts.ignoreRoot && name.split(".").length === 1) {
+    return [];
+  }
+
   const todo = [
     query({questions: [{name, type: "CAA"}]}, port, server).then(parseAnswers).catch(noop)
   ];

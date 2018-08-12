@@ -38,6 +38,7 @@ Test if the CAA record for a given `name` matches a given `ca`.
 - `port`: The port on the DNS server to use. Defaults to port 53.
 - `ignoreCNAME`: Don't issue CNAME queries.
 - `ignoreDNAME`: Don't issue DNAME queries.
+- `ignoreRoot`: Don't query top level domains.
 
 ## License
 
