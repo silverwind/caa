@@ -39,7 +39,7 @@ Test if the CAA record for a given `name` matches a given `ca`.
 - `ignoreCNAME`: Don't issue CNAME queries.
 - `ignoreDNAME`: Don't issue DNAME queries.
 - `ignoreTLDs`: Don't query top level domains.
-- Any valid [dns-socket option](https://github.com/mafintosh/dns-socket#var-socket--dnsoptions).
+- `dnsSocket`: A [dns-socket instance](https://github.com/mafintosh/dns-socket#var-socket--dnsoptions).
 
 ## License
 
