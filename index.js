@@ -102,7 +102,7 @@ const caa = module.exports = async (name, opts = {}) => {
   const query = util.promisify(socket.query.bind(socket));
   const port = opts.port || 53;
   const caa = await resolve({name, query, server, port, opts});
-  socket.destroy();
+  if (!opts.dnsSocket) socket.destroy();
   return caa || [];
 };
 
