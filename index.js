@@ -1,6 +1,7 @@
 "use strict";
 
 const dnsSocket = require("dns-socket");
+const tlds = require("tlds");
 const util = require("util");
 const noop = () => {};
 
@@ -27,7 +28,7 @@ function normalize(name) {
 
 // resolve a CAA record, possibly via recursion
 const resolve = async ({name, query, server, port, opts}) => {
-  if (opts.ignoreRoot && name.split(".").length === 1) {
+  if (opts.ignoreTLDs && tlds.includes(name)) {
     return [];
   }
 
@@ -75,9 +76,8 @@ const resolve = async ({name, query, server, port, opts}) => {
   }
 
   // If X is not a top-level domain, then R(X) = R(P(X)
-  const parts = name.split(".");
-  if (parts.length > 1) {
-    const parent = parts.splice(1).join(".");
+  if (!tlds.includes(name)) {
+    const parent = name.split(".").splice(1).join(".");
     return await resolve({name: parent, query, server, port, opts});
   } else {
     return [];

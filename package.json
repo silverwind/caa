@@ -21,7 +21,8 @@
     "certificate authority"
   ],
   "dependencies": {
-    "dns-socket": "^4.1.1"
+    "dns-socket": "^4.1.1",
+    "tlds": "^1.203.1"
   },
   "devDependencies": {
     "eslint": "^5.3.0",
