@@ -1,9 +1,19 @@
 "use strict";
 
 const dnsSocket = require("dns-socket");
-const tlds = require("tlds");
+const parseDomain = require("parse-domain");
 const util = require("util");
 const noop = () => {};
+
+function isTLD(name) {
+  const parsed = parseDomain(name);
+  if (!parsed) return false;
+  if (parsed && parsed.tld) {
+    return parsed.tld === name;
+  } else {
+    return false;
+  }
+}
 
 // map answer to {type: [data]}
 function parseAnswers(res) {
@@ -28,7 +38,7 @@ function normalize(name) {
 
 // resolve a CAA record, possibly via recursion
 const resolve = async ({name, query, server, port, opts}) => {
-  if (opts.ignoreTLDs && tlds.includes(name)) {
+  if (opts.ignoreTLDs && isTLD(name)) {
     return [];
   }
 
@@ -76,7 +86,7 @@ const resolve = async ({name, query, server, port, opts}) => {
   }
 
   // If X is not a top-level domain, then R(X) = R(P(X)
-  if (!tlds.includes(name)) {
+  if (!isTLD(name)) {
     const parent = name.split(".").splice(1).join(".");
     return await resolve({name: parent, query, server, port, opts});
   } else {
