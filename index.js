@@ -61,9 +61,9 @@ const resolve = async ({name, query, server, port, opts}) => {
   let alias;
   if (caa && caa.CAA && caa.CAA.length) {
     return caa.CAA;
-  } else if (cname && cname.CNAME.length) {
+  } else if (cname && cname.CNAME && cname.CNAME.length) {
     alias = cname.CNAME[0];
-  } else if (dname && dname.DNAME.length) {
+  } else if (dname && dname.CNAME && dname.DNAME.length) {
     alias = dname.DNAME[0];
   }
 
