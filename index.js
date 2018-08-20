@@ -33,7 +33,7 @@ const resolve = async ({name, query, server, port, opts}) => {
   }
 
   const todo = [
-    query({questions: [{name, type: "CAA"}]}, port, server).then(parseAnswers).catch(noop)
+    query({questions: [{name, type: "CAA"}]}, port, server).then(parseAnswers).catch(noop),
   ];
 
   if (!opts.ignoreCNAME) {
