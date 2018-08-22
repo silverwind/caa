@@ -89,9 +89,11 @@ const resolve = async ({name, query, server, port, recursion = MAX_RECURSION, op
   }
 
   if (alias) {
-    for (const record of records.CAA) {
-      if (record.name === alias && record.data) {
-        return [record.data];
+    if (records.CAA && records.CAA.length) {
+      for (const record of records.CAA) {
+        if (record.name === alias && record.data) {
+          return [record.data];
+        }
       }
     }
     recursion -= 1;
