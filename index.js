@@ -62,10 +62,9 @@ const resolve = async ({name, query, server, port, recursion = MAX_RECURSION, op
     return [];
   }
 
-  // on wildcard names, it makes more sense to cut the wildcard from the name
-  // so a CAA record on wildcard.example.com will always take effect for
-  // queries on *.wildcard.example.com.
-  name = name.replace(/^(\*\.)+/, "");
+  // Given a request for a specific domain X, or a request for a wildcard
+  // domain *.X, the relevant record set R(X) is determined ...
+  name = name.replace(/^\*\./, "");
 
   const records = parse(await query({questions: [{name, type: "CAA"}]}, port, server).catch(noop));
 
