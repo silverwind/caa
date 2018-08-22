@@ -135,7 +135,7 @@ caa.matches = async (name, ca, opts = {}) => {
     throw new Error(`Expected a string for 'name', got ${name}`);
   }
   if (typeof ca !== "string") {
-    throw new Error(`Expected a string for 'ca', got ${name}`);
+    throw new Error(`Expected a string for 'ca', got ${ca}`);
   }
 
   name = normalize(name);
