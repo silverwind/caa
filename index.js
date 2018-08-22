@@ -17,6 +17,10 @@ function isTLD(name) {
   }
 }
 
+function isWildcard(name) {
+  return /\*/.test(name);
+}
+
 // parse DNS answers to {type: [{name, data}]}
 function parse(res) {
   const types = {};
@@ -57,6 +61,11 @@ const resolve = async ({name, query, server, port, recursion = MAX_RECURSION, op
   if (recursion < 0) {
     return [];
   }
+
+  // on wildcard names, it makes more sense to cut the wildcard from the name
+  // so a CAA record on wildcard.example.com will always take effect for
+  // queries on *.wildcard.example.com.
+  name = name.replace(/^(\*\.)+/, "");
 
   const records = parse(await query({questions: [{name, type: "CAA"}]}, port, server).catch(noop));
 
@@ -137,10 +146,10 @@ caa.matches = async (name, ca, opts = {}) => {
     return true;
   }
 
-  const names = caas.filter(caa => caa && caa.tag === "issue").map(name => normalize(name.value));
-  if (names.includes(";")) {
-    return false;
-  }
+  const issueNames = caas.filter(caa => caa && caa.tag === "issue").map(name => normalize(name.value));
+  const issueWildNames = caas.filter(caa => caa && caa.tag === "issuewild").map(name => normalize(name.value));
+  const names = isWildcard(name) ? (issueWildNames.length ? issueWildNames : issueNames) : issueNames;
 
+  if (names.includes(";")) return false;
   return !names.length || names.includes(ca);
 };
