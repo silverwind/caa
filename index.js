@@ -5,6 +5,8 @@ const parseDomain = require("parse-domain");
 const util = require("util");
 const noop = () => {};
 
+const MAX_RECURSION = 50;
+
 function isTLD(name) {
   const parsed = parseDomain(name);
   if (!parsed) return false;
@@ -41,8 +43,18 @@ function normalize(name) {
 }
 
 // resolve a CAA record, possibly via recursion
-const resolve = async ({name, query, server, port, opts}) => {
+const resolve = async ({name, query, server, port, recursion = MAX_RECURSION, opts}) => {
+  name = normalize(name);
+
+  if (!name) {
+    return [];
+  }
+
   if (opts.ignoreTLDs && isTLD(name)) {
+    return [];
+  }
+
+  if (recursion < 0) {
     return [];
   }
 
@@ -64,7 +76,7 @@ const resolve = async ({name, query, server, port, opts}) => {
     alias = dest.data;
   } else if (records.DNAME && records.DNAME.length) {
     const dest = records.DNAME.filter(record => record.name === name)[0];
-    alias = name.replace(normalize(dest.name), normalize(dest.data));
+    alias = name.replace(dest.name, dest.data);
   }
 
   if (alias) {
@@ -73,10 +85,8 @@ const resolve = async ({name, query, server, port, opts}) => {
         return [record.data];
       }
     }
-    const acaa = await query({questions: [{name: alias, type: "CAA"}]}, port, server).then(parse).catch(noop);
-    if (acaa && acaa.CAA && acaa.CAA.length) {
-      return acaa.CAA.map(record => record.data);
-    }
+    recursion -= 1;
+    return await resolve({name: alias, query, server, port, recursion, opts});
   }
 
   // If X is not a top-level domain, then R(X) = R(P(X)
@@ -90,8 +100,10 @@ const resolve = async ({name, query, server, port, opts}) => {
 
 const caa = module.exports = async (name, opts = {}) => {
   if (typeof name !== "string") {
-    throw new Error("Expected a string");
+    throw new Error(`Expected a string for 'name', got ${name}`);
   }
+
+  name = normalize(name);
 
   let server;
   if (opts.server) {
@@ -101,7 +113,6 @@ const caa = module.exports = async (name, opts = {}) => {
     server = (servers && servers[0]) ? servers[0] : "8.8.8.8";
   }
 
-  name = normalize(name);
   const socket = opts.dnsSocket || dnsSocket();
   const query = util.promisify(socket.query.bind(socket));
   const port = opts.port || 53;
@@ -111,17 +122,25 @@ const caa = module.exports = async (name, opts = {}) => {
 };
 
 caa.matches = async (name, ca, opts = {}) => {
-  const caas = await caa(name, opts);
+  if (typeof name !== "string") {
+    throw new Error(`Expected a string for 'name', got ${name}`);
+  }
+  if (typeof ca !== "string") {
+    throw new Error(`Expected a string for 'ca', got ${name}`);
+  }
 
+  name = normalize(name);
+  ca = normalize(ca);
+
+  const caas = await caa(name, opts);
   if (!caas.length) {
     return true;
   }
 
   const names = caas.filter(caa => caa && caa.tag === "issue").map(name => normalize(name.value));
-
   if (names.includes(";")) {
     return false;
   }
 
-  return !names.length || names.includes(normalize(ca));
+  return !names.length || names.includes(ca);
 };
