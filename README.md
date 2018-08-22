@@ -36,9 +36,7 @@ Test if the CAA record for a given `name` matches a given `ca`.
 
 - `server`: The DNS server to use. Defaults to the first system resolver or `8.8.8.8` if none is configured).
 - `port`: The port on the DNS server to use. Defaults to port 53.
-- `ignoreCNAME`: Don't issue CNAME queries.
-- `ignoreDNAME`: Don't issue DNAME queries.
-- `ignoreTLDs`: Don't query top level domains.
+- `ignoreTLDs`: Don't query top level domains like `com` in `example.com`.
 - `dnsSocket`: A [dns-socket instance](https://github.com/mafintosh/dns-socket#var-socket--dnsoptions).
 
 ## License

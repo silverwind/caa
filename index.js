@@ -15,16 +15,20 @@ function isTLD(name) {
   }
 }
 
-// map answer to {type: [data]}
-function parseAnswers(res) {
+// parse DNS answers to {type: [{name, data}]}
+function parse(res) {
   const types = {};
-  if (!res || !res.answers) return null;
-  for (const answer of res.answers) {
-    if (!answer.type || !answer.data) return;
-    if (!types[answer.type]) types[answer.type] = [];
-    types[answer.type].push(answer.data);
+  if (res && res.answers && res.answers.length) {
+    for (const answer of res.answers) {
+      if (!answer.type || !answer.data) continue;
+      if (!types[answer.type]) types[answer.type] = [];
+      types[answer.type].push({
+        name: answer.name,
+        data: answer.data,
+      });
+    }
   }
-  return Object.keys(types).length ? types : null;
+  return types;
 }
 
 // normalize a DNS name
@@ -42,46 +46,36 @@ const resolve = async ({name, query, server, port, opts}) => {
     return [];
   }
 
-  const todo = [
-    query({questions: [{name, type: "CAA"}]}, port, server).then(parseAnswers).catch(noop),
-  ];
-
-  if (!opts.ignoreCNAME) {
-    todo.push(query({questions: [{name, type: "CNAME"}]}, port, server).then(parseAnswers).catch(noop));
-  }
-
-  if (!opts.ignoreDNAME) {
-    todo.push(query({questions: [{name, type: "DNAME"}]}, port, server).then(parseAnswers).catch(noop));
-  }
-
-  const res = await Promise.all(todo);
-
-  const caa = res[0];
-  let cname, dname;
-  if (!opts.ignoreCNAME && !opts.ignoreDNAME) {
-    cname = res[1];
-    dname = res[2];
-  } else if (opts.ignoreCNAME && !opts.ignoreDNAME) {
-    dname = res[1];
-  } else if (opts.ignoreDNAME && !opts.ignoreCNAME) {
-    cname = res[2];
-  }
+  const records = parse(await query({questions: [{name, type: "CAA"}]}, port, server).catch(noop));
 
   // If CAA(X) is not empty, R(X) = CAA (X)
-  let alias;
-  if (caa && caa.CAA && caa.CAA.length) {
-    return caa.CAA;
-  } else if (cname && cname.CNAME && cname.CNAME.length) {
-    alias = cname.CNAME[0];
-  } else if (dname && dname.DNAME && dname.DNAME.length) {
-    alias = dname.DNAME[0];
+  if (records.CAA && records.CAA.length) {
+    const caas = records.CAA.filter(record => record.name === name).map(record => record.data);
+    if (caas.length) {
+      return caas;
+    }
   }
 
   // If ALIAS(X) is not null, and R(A(X)) is not empty, then R(X) = R(A(X))
+  let alias;
+
+  if (records.CNAME && records.CNAME.length) {
+    const dest = records.CNAME.filter(record => record.name === name)[0];
+    alias = dest.data;
+  } else if (records.DNAME && records.DNAME.length) {
+    const dest = records.DNAME.filter(record => record.name === name)[0];
+    alias = name.replace(normalize(dest.name), normalize(dest.data));
+  }
+
   if (alias) {
-    const acaa = await query({questions: [{name: alias, type: "CAA"}]}, port, server).then(parseAnswers).catch(noop);
+    for (const record of records.CAA) {
+      if (record.name === alias && record.data) {
+        return [record.data];
+      }
+    }
+    const acaa = await query({questions: [{name: alias, type: "CAA"}]}, port, server).then(parse).catch(noop);
     if (acaa && acaa.CAA && acaa.CAA.length) {
-      return acaa.CAA;
+      return acaa.CAA.map(record => record.data);
     }
   }
 
