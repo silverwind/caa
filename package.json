@@ -25,8 +25,8 @@
     "parse-domain": "^2.1.2"
   },
   "devDependencies": {
-    "eslint": "^5.4.0",
-    "eslint-config-silverwind": "^2.0.6",
-    "updates": "^4.1.2"
+    "eslint": "^5.5.0",
+    "eslint-config-silverwind": "^2.0.9",
+    "updates": "^4.3.0"
   }
 }
