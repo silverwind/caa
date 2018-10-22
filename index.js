@@ -147,8 +147,13 @@ caa.matches = async (name, ca, opts = {}) => {
     return true;
   }
 
-  const issueNames = caas.filter(caa => caa && caa.tag === "issue").map(name => normalize(name.value));
-  const issueWildNames = caas.filter(caa => caa && caa.tag === "issuewild").map(name => normalize(name.value));
+  const issueNames = caas
+    .filter(caa => caa && caa.tag === "issue")
+    .map(name => normalize(name.value.split(";")[0]));
+  const issueWildNames = caas
+    .filter(caa => caa && caa.tag === "issuewild")
+    .map(name => normalize(name.value.split(";")[0]));
+
   const names = isWildcard(name) ? (issueWildNames.length ? issueWildNames : issueNames) : issueNames;
 
   if (names.includes(";")) return false;
