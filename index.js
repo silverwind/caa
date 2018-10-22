@@ -3,9 +3,17 @@
 const dnsSocket = require("dns-socket");
 const parseDomain = require("parse-domain");
 const util = require("util");
-const noop = () => {};
 
-const MAX_RECURSION = 50;
+const defaults = {
+  ignoreTLDs: false,
+  recursions: 50,
+  retries: 12,
+  port: 53,
+  servers: [
+    "8.8.8.8",
+    "8.8.4.4",
+  ],
+};
 
 function isTLD(name) {
   const parsed = parseDomain(name);
@@ -21,22 +29,6 @@ function isWildcard(name) {
   return /\*/.test(name);
 }
 
-// parse DNS answers to {type: [{name, data}]}
-function parse(res) {
-  const types = {};
-  if (res && res.answers && res.answers.length) {
-    for (const answer of res.answers) {
-      if (!answer.type || !answer.data) continue;
-      if (!types[answer.type]) types[answer.type] = [];
-      types[answer.type].push({
-        name: answer.name,
-        data: answer.data,
-      });
-    }
-  }
-  return types;
-}
-
 // normalize a DNS name
 function normalize(name) {
   name = (name || "").toLowerCase();
@@ -46,19 +38,23 @@ function normalize(name) {
   return name;
 }
 
+function selectServer(servers, retries, tries) {
+  return servers[(tries - retries) % servers.length];
+}
+
 // resolve a CAA record, possibly via recursion
-const resolve = async ({name, query, server, port, recursion = MAX_RECURSION, opts}) => {
+const resolve = async ({name, query, servers, port, recursions, retries, tries, ignoreTLDs}) => {
   name = normalize(name);
 
   if (!name) {
     return [];
   }
 
-  if (opts.ignoreTLDs && isTLD(name)) {
+  if (ignoreTLDs && isTLD(name)) {
     return [];
   }
 
-  if (recursion < 0) {
+  if (recursions <= 0 || retries <= 0) {
     return [];
   }
 
@@ -66,7 +62,41 @@ const resolve = async ({name, query, server, port, recursion = MAX_RECURSION, op
   // domain *.X, the relevant record set R(X) is determined ...
   name = name.replace(/^\*\./, "");
 
-  const records = parse(await query({questions: [{name, type: "CAA"}]}, port, server).catch(noop));
+  const server = selectServer(servers, retries, tries);
+
+  let res;
+  try {
+    res = await query({questions: [{name, type: "CAA"}]}, port, server);
+  } catch (err) {
+    if (retries <= 0) {
+      return [];
+    }
+
+    retries -= 1;
+    return await resolve({name, query, servers, port, recursions, retries, tries, ignoreTLDs});
+  }
+
+  if (!res || (!res.answers && !["NXDOMAIN", "NOERROR"].includes(res.rcode))) {
+    if (retries <= 0) {
+      return [];
+    }
+
+    retries -= 1;
+    return await resolve({name, query, servers, port, recursions, retries, tries, ignoreTLDs});
+  }
+
+  // parse DNS answers to {type: [{name, data}]}
+  const records = {};
+  if (res && res.answers && res.answers.length) {
+    for (const answer of res.answers) {
+      if (!answer.type || !answer.data) continue;
+      if (!records[answer.type]) records[answer.type] = [];
+      records[answer.type].push({
+        name: answer.name,
+        data: answer.data,
+      });
+    }
+  }
 
   // If CAA(X) is not empty, R(X) = CAA (X)
   if (records.CAA && records.CAA.length) {
@@ -95,14 +125,14 @@ const resolve = async ({name, query, server, port, recursion = MAX_RECURSION, op
         }
       }
     }
-    recursion -= 1;
-    return await resolve({name: alias, query, server, port, recursion, opts});
+    recursions -= 1;
+    return await resolve({name: alias, query, servers, port, recursions, retries, tries, ignoreTLDs});
   }
 
   // If X is not a top-level domain, then R(X) = R(P(X)
   if (!isTLD(name)) {
     const parent = name.split(".").splice(1).join(".");
-    return await resolve({name: parent, query, server, port, opts});
+    return await resolve({name: parent, query, servers, port, recursions, retries, tries, ignoreTLDs});
   } else {
     return [];
   }
@@ -115,18 +145,26 @@ const caa = module.exports = async (name, opts = {}) => {
 
   name = normalize(name);
 
-  let server;
-  if (opts.server) {
-    server = opts.server;
-  } else {
-    const servers = require("dns").getServers();
-    server = (servers && servers[0]) ? servers[0] : "8.8.8.8";
+  if (!opts.servers) {
+    const systemServers = require("dns").getServers();
+    opts.servers = (systemServers && systemServers.length) ? systemServers : defaults.servers;
   }
+
+  opts = Object.assign({}, defaults, opts);
 
   const socket = opts.dnsSocket || dnsSocket();
   const query = util.promisify(socket.query.bind(socket));
-  const port = opts.port || 53;
-  const caa = await resolve({name, query, server, port, opts});
+
+  const caa = await resolve({
+    name, query,
+    servers: opts.servers,
+    port: opts.port,
+    recursions: opts.recursions,
+    retries: opts.retries,
+    tries: opts.retries,
+    ignoreTLDs: opts.ignoreTLDs,
+  });
+
   if (!opts.dnsSocket) socket.destroy();
   return caa || [];
 };

@@ -34,8 +34,10 @@ Test if the CAA record for `name` matches for certificate authority `ca`.
 
 #### `options`
 
-- `server`: The DNS server to use. Defaults to the first system resolver or `'8.8.8.8'` if none is configured.
-- `port`: The port on the DNS server to use. Defaults to `53`.
+- `servers`: The DNS servers to use. Defaults to the system resolvers or `['8.8.8.8', '8.8.4.4']` if none are configured.
+- `port`: The port on the DNS server to use. Default `53`.
+- `recursions`: How many recursions to follow. Default `50`.
+- `retries`: How many retries to attempt. Default `12`.
 - `ignoreTLDs`: Don't query top level domains like `com` in `example.com`.
 - `dnsSocket`: A [dns-socket instance](https://github.com/mafintosh/dns-socket#var-socket--dnsoptions).
 
