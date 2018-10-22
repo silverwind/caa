@@ -22,11 +22,11 @@
   ],
   "dependencies": {
     "dns-socket": "^4.1.1",
-    "parse-domain": "^2.1.2"
+    "parse-domain": "^2.1.6"
   },
   "devDependencies": {
-    "eslint": "^5.5.0",
+    "eslint": "^5.7.0",
     "eslint-config-silverwind": "^2.0.9",
-    "updates": "^4.3.0"
+    "updates": "^5.1.1"
   }
 }

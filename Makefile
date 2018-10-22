@@ -9,19 +9,21 @@ publish:
 update:
 	npx updates -u
 	rm -rf node_modules
-	yarn
+	npm i --no-package-lock
 
-npm-patch:
-	npm version patch
+patch:
+	$(MAKE) test
+	npx ver patch
+	$(MAKE) publish
 
-npm-minor:
-	npm version minor
+minor:
+	$(MAKE) test
+	npx ver minor
+	$(MAKE) publish
 
-npm-major:
-	npm version major
+major:
+	$(MAKE) test
+	npx ver major
+	$(MAKE) publish
 
-patch: test npm-patch publish
-minor: test npm-minor publish
-major: test npm-major publish
-
-.PHONY: test publish update patch minor major npm-patch npm-minor npm-major
+.PHONY: test publish update patch minor major
