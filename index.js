@@ -43,7 +43,7 @@ function selectServer(servers, retries, tries) {
 }
 
 // resolve a CAA record, possibly via recursion
-const resolve = async ({name, query, servers, port, recursions, retries, tries, ignoreTLDs}) => {
+const resolve = async ({name, query, servers, port, recursions, retries, tries, ignoreTLDs, isAlias, originalDomain}) => {
   name = normalize(name);
 
   if (!name) {
@@ -106,6 +106,15 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
     }
   }
 
+  // There was a CNAME record, but CNAME did not have a CAA record set. We now need to
+  // keep searching the original domain's hierarchy
+  if (isAlias) {
+    const parent = originalDomain.split(".").splice(1).join(".");
+
+    retries -= 1;
+    return await resolve({name: parent, query, servers, port, recursions, retries, tries, ignoreTLDs});
+  }
+
   // If ALIAS(X) is not null, and R(A(X)) is not empty, then R(X) = R(A(X))
   let alias;
 
@@ -126,7 +135,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
       }
     }
     recursions -= 1;
-    return await resolve({name: alias, query, servers, port, recursions, retries, tries, ignoreTLDs});
+    return await resolve({name: alias, query, servers, port, recursions, retries, tries, ignoreTLDs, originalDomain: name, isAlias: true});
   }
 
   // If X is not a top-level domain, then R(X) = R(P(X)
