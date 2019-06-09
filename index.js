@@ -42,6 +42,10 @@ function selectServer(servers, retries, tries) {
   return servers[(tries - retries) % servers.length];
 }
 
+function parent(name) {
+  return name.split(".").splice(1).join(".");
+}
+
 // resolve a CAA record, possibly via recursion
 const resolve = async ({name, query, servers, port, recursions, retries, tries, ignoreTLDs}) => {
   name = normalize(name);
@@ -106,9 +110,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
     }
   }
 
-  // If ALIAS(X) is not null, and R(A(X)) is not empty, then R(X) = R(A(X))
   let alias;
-
   if (records.CNAME && records.CNAME.length) {
     const dest = records.CNAME.filter(record => record.name === name)[0];
     alias = dest.data;
@@ -117,6 +119,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
     alias = name.replace(dest.name, dest.data);
   }
 
+  // If A(X) is not null, and CAA(A(X)) is not empty, then R(X) = CAA(A(X)), otherwise
   if (alias) {
     if (records.CAA && records.CAA.length) {
       for (const record of records.CAA) {
@@ -126,13 +129,11 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
       }
     }
     recursions -= 1;
-    return await resolve({name: alias, query, servers, port, recursions, retries, tries, ignoreTLDs});
   }
 
   // If X is not a top-level domain, then R(X) = R(P(X)
   if (!isTLD(name)) {
-    const parent = name.split(".").splice(1).join(".");
-    return await resolve({name: parent, query, servers, port, recursions, retries, tries, ignoreTLDs});
+    return await resolve({name: parent(name), query, servers, port, recursions, retries, tries, ignoreTLDs});
   } else {
     return [];
   }
