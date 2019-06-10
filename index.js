@@ -128,11 +128,11 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
         }
       }
     }
-    recursions -= 1;
   }
 
   // If X is not a top-level domain, then R(X) = R(P(X)
   if (!isTLD(name)) {
+    recursions -= 1;
     return await resolve({name: parent(name), query, servers, port, recursions, retries, tries, ignoreTLDs});
   } else {
     return [];
