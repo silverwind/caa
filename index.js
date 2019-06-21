@@ -2,7 +2,7 @@
 
 const dnsSocket = require("dns-socket");
 const parseDomain = require("parse-domain");
-const util = require("util");
+const {promisify} = require("util");
 
 const defaults = {
   ignoreTLDs: false,
@@ -154,7 +154,7 @@ const caa = module.exports = async (name, opts = {}) => {
   opts = Object.assign({}, defaults, opts);
 
   const socket = opts.dnsSocket || dnsSocket();
-  const query = util.promisify(socket.query.bind(socket));
+  const query = promisify(socket.query.bind(socket));
 
   const caa = await resolve({
     name, query,
