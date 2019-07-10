@@ -13,6 +13,7 @@ const defaults = {
     "8.8.8.8",
     "8.8.4.4",
   ],
+  dnsSocket: undefined,
 };
 
 function isTLD(name) {
