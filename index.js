@@ -123,11 +123,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   // If A(X) is not null, and CAA(A(X)) is not empty, then R(X) = CAA(A(X)), otherwise
   if (alias) {
     if (records.CAA && records.CAA.length) {
-      for (const record of records.CAA) {
-        if (record.name === alias && record.data) {
-          return [record.data];
-        }
-      }
+      return records.CAA.filter((record) => record.name === alias && record.data).map((record) => record.data);
     }
   }
 
