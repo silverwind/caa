@@ -8,6 +8,8 @@ const assert = require("assert");
     const tests = [
       {promise: caa("silverwind.io"), expect: records => records.map(r => r.value).includes("letsencrypt.org")},
       {promise: caa("sub.silverwind.io"), expect: records => records.map(r => r.value).includes("letsencrypt.org")},
+      {promise: caa("caa-multi.silverwind.io"), expect: records => records.length > 1},
+      {promise: caa("cname-caa-multi.silverwind.io"), expect: records => records.length > 1},
       {promise: caa.matches("silverwind.io", "letsencrypt.org"), expect: true},
       {promise: caa.matches("sub.silverwind.io", "letsencrypt.org"), expect: true},
       {promise: caa.matches("caa-none.silverwind.io", "letsencrypt.org"), expect: false},
