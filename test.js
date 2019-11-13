@@ -19,6 +19,10 @@ const assert = require("assert");
       {promise: caa.matches("sub.caa-wild.silverwind.io", "letsencrypt.org"), expect: true},
       {promise: caa.matches("caa-none-cname.silverwind.io", "letsencrypt.org"), expect: false},
       {promise: caa.matches("caa-cname.silverwind.io", "letsencrypt.org"), expect: true},
+      {promise: caa.matches("caa-multi.silverwind.io", "first.com"), expect: true},
+      {promise: caa.matches("caa-multi.silverwind.io", "second.com"), expect: true},
+      {promise: caa.matches("cname-caa-multi.silverwind.io", "first.com"), expect: true},
+      {promise: caa.matches("cname-caa-multi.silverwind.io", "second.com"), expect: true},
     ];
 
     const results = await Promise.all(tests.map(test => test.promise));
