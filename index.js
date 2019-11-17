@@ -9,10 +9,7 @@ const defaults = {
   recursions: 50,
   retries: 12,
   port: 53,
-  servers: [
-    "8.8.8.8",
-    "8.8.4.4",
-  ],
+  servers: ["8.8.8.8", "8.8.4.4"], // these are only used as fallback to system's servers
   dnsSocket: undefined,
 };
 
@@ -30,8 +27,7 @@ function isWildcard(name) {
   return /\*/.test(name);
 }
 
-// normalize a DNS name
-function normalize(name) {
+function normalizeName(name) {
   name = (name || "").toLowerCase();
   if (name.endsWith(".") && name.length > 1) {
     name = name.substring(0, name.length - 1);
@@ -49,7 +45,7 @@ function parent(name) {
 
 // resolve a CAA record, possibly via recursion
 const resolve = async ({name, query, servers, port, recursions, retries, tries, ignoreTLDs}) => {
-  name = normalize(name);
+  name = normalizeName(name);
 
   if (!name) {
     return [];
@@ -141,7 +137,7 @@ const caa = module.exports = async (name, opts = {}) => {
     throw new Error(`Expected a string for 'name', got ${name}`);
   }
 
-  name = normalize(name);
+  name = normalizeName(name);
 
   if (!opts.servers) {
     const systemServers = require("dns").getServers();
@@ -175,8 +171,8 @@ caa.matches = async (name, ca, opts = {}) => {
     throw new Error(`Expected a string for 'ca', got ${ca}`);
   }
 
-  name = normalize(name);
-  ca = normalize(ca);
+  name = normalizeName(name);
+  ca = normalizeName(ca);
 
   const caas = await caa(name, opts);
   if (!caas.length) {
@@ -185,10 +181,10 @@ caa.matches = async (name, ca, opts = {}) => {
 
   const issueNames = caas
     .filter(caa => caa && caa.tag === "issue")
-    .map(name => normalize(name.value.split(";")[0].trim()));
+    .map(name => normalizeName(name.value.split(";")[0].trim()));
   const issueWildNames = caas
     .filter(caa => caa && caa.tag === "issuewild")
-    .map(name => normalize(name.value.split(";")[0].trim()));
+    .map(name => normalizeName(name.value.split(";")[0].trim()));
 
   const names = isWildcard(name) ? (issueWildNames.length ? issueWildNames : issueNames) : issueNames;
 
