@@ -1,8 +1,10 @@
 "use strict";
 
 const dnsSocket = require("dns-socket");
-const parseDomain = require("parse-domain");
+const tlds = require("tlds");
 const {promisify} = require("util");
+
+const tldSet = new Set(tlds);
 
 const defaults = {
   ignoreTLDs: false,
@@ -14,13 +16,7 @@ const defaults = {
 };
 
 function isTLD(name) {
-  const parsed = parseDomain(name);
-  if (!parsed) return false;
-  if (parsed && parsed.tld) {
-    return parsed.tld === name;
-  } else {
-    return false;
-  }
+  return tldSet.has(name);
 }
 
 function isWildcard(name) {
