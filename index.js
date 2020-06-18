@@ -64,7 +64,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   let res;
   try {
     res = await query({questions: [{name, type: "CAA"}]}, port, server);
-  } catch (err) {
+  } catch {
     if (retries <= 0) {
       return [];
     }

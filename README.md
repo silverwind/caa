@@ -1,16 +1,13 @@
 # caa
-[![](https://img.shields.io/npm/v/caa.svg?style=flat)](https://www.npmjs.org/package/caa) [![](https://img.shields.io/npm/dm/caa.svg)](https://www.npmjs.org/package/caa) [![](https://api.travis-ci.org/silverwind/caa.svg?style=flat)](https://travis-ci.org/silverwind/caa)
+[![](https://img.shields.io/npm/v/caa.svg?style=flat)](https://www.npmjs.org/package/caa) [![](https://img.shields.io/npm/dm/caa.svg)](https://www.npmjs.org/package/caa)
 
 > [rfc6844](https://tools.ietf.org/html/rfc6844)-conform CAA record lookup and validation
 
-## Install
+## Usage
 
 ```sh
 npm i caa
 ```
-
-## Usage
-
 ```js
 const caa = require('caa');
 
@@ -23,7 +20,6 @@ await caa.matches('subdomain.example.com', 'letsencrypt.org');
 ```
 
 ## API
-
 ### `caa(name, [options])`
 
 Retrieve the CAA records which apply to `name`. Returns a [`CAA` object](https://github.com/mafintosh/dns-packet/#caa).

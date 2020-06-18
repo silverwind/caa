@@ -25,9 +25,14 @@
     "tlds": "1.207.0"
   },
   "devDependencies": {
-    "eslint": "6.8.0",
-    "eslint-config-silverwind": "5.1.2",
-    "updates": "9.3.3",
-    "ver": "6.0.2"
+    "eslint": "7.2.0",
+    "eslint-config-silverwind": "13.4.6",
+    "jest": "26.0.1",
+    "updates": "10.2.14",
+    "versions": "8.4.1"
+  },
+  "jest": {
+    "verbose": false,
+    "testTimeout": 10000
   }
 }
