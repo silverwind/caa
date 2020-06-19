@@ -4,8 +4,6 @@ const dnsSocket = require("dns-socket");
 const tlds = require("tlds");
 const {promisify} = require("util");
 
-const tldSet = new Set(tlds);
-
 const defaults = {
   ignoreTLDs: false,
   recursions: 50,
@@ -15,69 +13,39 @@ const defaults = {
   dnsSocket: undefined,
 };
 
-function isTLD(name) {
-  return tldSet.has(name);
-}
+const tldSet = new Set(tlds);
+const isTLD = name => tldSet.has(name);
+const isWildcard = name => /\*/.test(name);
+const parent = name => name.split(".").splice(1).join(".");
+const selectServer = (servers, retries, tries) => servers[(tries - retries) % servers.length];
 
-function isWildcard(name) {
-  return /\*/.test(name);
-}
-
-function normalizeName(name) {
-  name = (name || "").toLowerCase();
-  if (name.endsWith(".") && name.length > 1) {
-    name = name.substring(0, name.length - 1);
-  }
-  return name;
-}
-
-function selectServer(servers, retries, tries) {
-  return servers[(tries - retries) % servers.length];
-}
-
-function parent(name) {
-  return name.split(".").splice(1).join(".");
+function normalizeName(name = "") {
+  name = name.toLowerCase();
+  return (name.endsWith(".") && name.length > 1) ? name.substring(0, name.length - 1) : name;
 }
 
 // resolve a CAA record, possibly via recursion
 const resolve = async ({name, query, servers, port, recursions, retries, tries, ignoreTLDs}) => {
   name = normalizeName(name);
-
-  if (!name) {
-    return [];
-  }
-
-  if (ignoreTLDs && isTLD(name)) {
-    return [];
-  }
-
-  if (recursions <= 0 || retries <= 0) {
-    return [];
-  }
+  if (!name) return [];
+  if (ignoreTLDs && isTLD(name)) return [];
+  if (recursions <= 0 || retries <= 0) return [];
 
   // Given a request for a specific domain X, or a request for a wildcard
   // domain *.X, the relevant record set R(X) is determined ...
   name = name.replace(/^\*\./, "");
 
-  const server = selectServer(servers, retries, tries);
-
   let res;
   try {
-    res = await query({questions: [{name, type: "CAA"}]}, port, server);
+    res = await query({questions: [{name, type: "CAA"}]}, port, selectServer(servers, retries, tries));
   } catch {
-    if (retries <= 0) {
-      return [];
-    }
-
+    if (retries <= 0) return [];
     retries -= 1;
     return await resolve({name, query, servers, port, recursions, retries, tries, ignoreTLDs});
   }
 
   if (!res || (!res.answers && !["NXDOMAIN", "NOERROR"].includes(res.rcode))) {
-    if (retries <= 0) {
-      return [];
-    }
-
+    if (retries <= 0) return [];
     retries -= 1;
     return await resolve({name, query, servers, port, recursions, retries, tries, ignoreTLDs});
   }
@@ -85,22 +53,17 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   // parse DNS answers to {type: [{name, data}]}
   const records = {};
   if (res && res.answers && res.answers.length) {
-    for (const answer of res.answers) {
-      if (!answer.type || !answer.data) continue;
-      if (!records[answer.type]) records[answer.type] = [];
-      records[answer.type].push({
-        name: answer.name,
-        data: answer.data,
-      });
+    for (const {name, type, data} of res.answers || {}) {
+      if (!name || !type || !data) continue;
+      if (!records[type]) records[type] = [];
+      records[type].push({name, data});
     }
   }
 
   // If CAA(X) is not empty, R(X) = CAA (X)
   if (records.CAA && records.CAA.length) {
     const caas = records.CAA.filter(record => record.name === name).map(record => record.data);
-    if (caas.length) {
-      return caas;
-    }
+    if (caas.length) return caas;
   }
 
   let alias;
@@ -129,10 +92,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
 };
 
 const caa = module.exports = async (name, opts = {}) => {
-  if (typeof name !== "string") {
-    throw new Error(`Expected a string for 'name', got ${name}`);
-  }
-
+  if (typeof name !== "string") throw new Error(`Expected a string for 'name', got ${name}`);
   name = normalizeName(name);
 
   if (!opts.servers) {
@@ -160,20 +120,14 @@ const caa = module.exports = async (name, opts = {}) => {
 };
 
 caa.matches = async (name, ca, opts = {}) => {
-  if (typeof name !== "string") {
-    throw new Error(`Expected a string for 'name', got ${name}`);
-  }
-  if (typeof ca !== "string") {
-    throw new Error(`Expected a string for 'ca', got ${ca}`);
-  }
+  if (typeof name !== "string") throw new Error(`Expected a string for 'name', got ${name}`);
+  if (typeof ca !== "string") throw new Error(`Expected a string for 'ca', got ${ca}`);
 
   name = normalizeName(name);
   ca = normalizeName(ca);
 
   const caas = await caa(name, opts);
-  if (!caas.length) {
-    return true;
-  }
+  if (!caas.length) return true;
 
   const issueNames = caas
     .filter(caa => caa && caa.tag === "issue")
