@@ -21,15 +21,15 @@
     "certificate authority"
   ],
   "dependencies": {
-    "dns-socket": "^4.2.0",
-    "tlds": "1.207.0"
+    "dns-socket": "^4.2.1",
+    "tlds": "1.210.0"
   },
   "devDependencies": {
-    "eslint": "7.2.0",
-    "eslint-config-silverwind": "13.4.6",
-    "jest": "26.0.1",
-    "updates": "10.2.14",
-    "versions": "8.4.1"
+    "eslint": "7.10.0",
+    "eslint-config-silverwind": "20.0.0",
+    "jest": "26.4.2",
+    "updates": "11.1.5",
+    "versions": "8.4.3"
   },
   "jest": {
     "verbose": false,

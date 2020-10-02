@@ -68,10 +68,10 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
 
   let alias;
   if (records.CNAME && records.CNAME.length) {
-    const dest = records.CNAME.filter(record => record.name === name)[0];
+    const dest = records.CNAME.find(record => record.name === name);
     alias = dest.data;
   } else if (records.DNAME && records.DNAME.length) {
-    const dest = records.DNAME.filter(record => record.name === name)[0];
+    const dest = records.DNAME.find(record => record.name === name);
     alias = name.replace(dest.name, dest.data);
   }
 
