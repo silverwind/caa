@@ -22,7 +22,7 @@
   ],
   "dependencies": {
     "dns-socket": "^4.2.1",
-    "tlds": "1.211.0"
+    "tlds": "^1.211.0"
   },
   "devDependencies": {
     "eslint": "7.11.0",
