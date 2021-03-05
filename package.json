@@ -22,14 +22,14 @@
   ],
   "dependencies": {
     "dns-socket": "^4.2.1",
-    "tlds": "^1.211.0"
+    "tlds": "^1.218.0"
   },
   "devDependencies": {
-    "eslint": "7.11.0",
-    "eslint-config-silverwind": "21.0.1",
-    "jest": "26.5.3",
-    "updates": "11.2.5",
-    "versions": "8.4.3"
+    "eslint": "7.21.0",
+    "eslint-config-silverwind": "29.0.0",
+    "jest": "26.6.3",
+    "updates": "11.4.3",
+    "versions": "8.4.5"
   },
   "jest": {
     "verbose": false,
