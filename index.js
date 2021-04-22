@@ -1,5 +1,3 @@
-"use strict";
-
 import {getServers} from "dns";
 import dnsSocket from "dns-socket";
 import tlds from "tlds";
