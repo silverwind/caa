@@ -2,10 +2,10 @@ lint:
 	yarn -s run eslint --color .
 
 test: lint
-	yarn -s run jest --color
+	NODE_OPTIONS="--experimental-vm-modules --no-warnings" yarn -s run jest --color
 
 unittest:
-	yarn -s run jest --watchAll
+	NODE_OPTIONS="--experimental-vm-modules --no-warnings" yarn -s run jest --color --watchAll
 
 publish:
 	git push -u --tags origin master

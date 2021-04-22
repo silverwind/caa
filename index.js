@@ -1,8 +1,9 @@
 "use strict";
 
-const dnsSocket = require("dns-socket");
-const tlds = require("tlds");
-const {promisify} = require("util");
+import {getServers} from "dns";
+import dnsSocket from "dns-socket";
+import tlds from "tlds";
+import {promisify} from "util";
 
 const defaults = {
   ignoreTLDs: false,
@@ -89,12 +90,12 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   }
 };
 
-const caa = module.exports = async (name, opts = {}) => {
+export default async function caa(name, opts = {}) {
   if (typeof name !== "string") throw new Error(`Expected a string for 'name', got ${name}`);
   name = normalizeName(name);
 
   if (!opts.servers) {
-    const systemServers = require("dns").getServers();
+    const systemServers = getServers();
     opts.servers = (systemServers && systemServers.length) ? systemServers : defaults.servers;
   }
 
@@ -115,7 +116,7 @@ const caa = module.exports = async (name, opts = {}) => {
 
   if (!opts.dnsSocket) socket.destroy();
   return caa || [];
-};
+}
 
 caa.matches = async (name, ca, opts = {}) => {
   if (typeof name !== "string") throw new Error(`Expected a string for 'name', got ${name}`);

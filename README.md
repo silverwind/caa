@@ -9,7 +9,7 @@
 npm i caa
 ```
 ```js
-const caa = require('caa');
+import caa from 'caa';
 
 await caa('subdomain.example.com');
 // => [{flags: 0, tag: 'issue', value: 'letsencrypt.org', issuerCritical: false}]

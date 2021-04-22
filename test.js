@@ -1,4 +1,4 @@
-const caa = require(".");
+import caa from "./index.js";
 
 test("tests", async () => {
   const tests = [
