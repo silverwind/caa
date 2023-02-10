@@ -1,7 +1,7 @@
-import {getServers} from "dns";
+import {getServers} from "node:dns";
+import {promisify} from "node:util";
 import dnsSocket from "dns-socket";
 import tlds from "tlds";
-import {promisify} from "util";
 
 const defaults = {
   ignoreTLDs: false,
@@ -88,7 +88,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   }
 };
 
-export default async function caa(name, opts = {}) {
+export async function caa(name, opts = {}) {
   if (typeof name !== "string") throw new Error(`Expected a string for 'name', got ${name}`);
   name = normalizeName(name);
 
@@ -97,7 +97,7 @@ export default async function caa(name, opts = {}) {
     opts.servers = (systemServers && systemServers.length) ? systemServers : defaults.servers;
   }
 
-  opts = Object.assign({}, defaults, opts);
+  opts = {...defaults, ...opts};
 
   const socket = opts.dnsSocket || dnsSocket();
   const query = promisify(socket.query.bind(socket));
@@ -116,7 +116,7 @@ export default async function caa(name, opts = {}) {
   return caa || [];
 }
 
-caa.matches = async (name, ca, opts = {}) => {
+export async function caaMatches(name, ca, opts = {}) {
   if (typeof name !== "string") throw new Error(`Expected a string for 'name', got ${name}`);
   if (typeof ca !== "string") throw new Error(`Expected a string for 'ca', got ${ca}`);
 
@@ -137,4 +137,4 @@ caa.matches = async (name, ca, opts = {}) => {
 
   if (names.includes(";")) return false;
   return !names.length || names.includes(ca);
-};
+}

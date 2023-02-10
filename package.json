@@ -7,11 +7,8 @@
   "license": "BSD-2-Clause",
   "type": "module",
   "exports": "./index.js",
-  "scripts": {
-    "test": "make test"
-  },
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   },
   "files": [
     "index.js"
@@ -23,20 +20,14 @@
     "certificate authority"
   ],
   "dependencies": {
-    "dns-socket": "^4.2.1",
-    "tlds": "^1.220.0"
+    "dns-socket": "^4.2.2",
+    "tlds": "^1.236.0"
   },
   "devDependencies": {
-    "@babel/core": "7.13.16",
-    "eslint": "7.24.0",
-    "eslint-config-silverwind": "32.3.3",
-    "jest": "27.0.0-next.8",
-    "updates": "12.0.2",
-    "versions": "8.4.7"
-  },
-  "jest": {
-    "verbose": false,
-    "testTimeout": 10000,
-    "transform": {}
+    "eslint": "8.34.0",
+    "eslint-config-silverwind": "65.1.0",
+    "updates": "13.2.8",
+    "versions": "10.4.1",
+    "vitest": "0.28.4"
   }
 }

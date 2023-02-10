@@ -9,12 +9,12 @@
 npm i caa
 ```
 ```js
-import caa from 'caa';
+import {caa, caaMatches} from "caa";
 
-await caa('subdomain.example.com');
+await caa("subdomain.example.com");
 // => [{flags: 0, tag: 'issue', value: 'letsencrypt.org', issuerCritical: false}]
 
-await caa.matches('subdomain.example.com', 'letsencrypt.org');
+await caa.matches("subdomain.example.com", "letsencrypt.org");
 // => true
 
 ```
@@ -24,7 +24,7 @@ await caa.matches('subdomain.example.com', 'letsencrypt.org');
 
 Retrieve the CAA records which apply to `name`. Returns a [`CAA` object](https://github.com/mafintosh/dns-packet/#caa).
 
-### `caa.matches(name, ca, [options])`
+### `caaMatches(name, ca, [options])`
 
 Test if the CAA record for `name` matches for certificate authority `ca`.
 
