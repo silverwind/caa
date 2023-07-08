@@ -21,13 +21,14 @@
   ],
   "dependencies": {
     "dns-socket": "^4.2.2",
-    "tlds": "^1.236.0"
+    "tlds": "^1.240.0"
   },
   "devDependencies": {
-    "eslint": "8.34.0",
-    "eslint-config-silverwind": "65.1.0",
-    "updates": "13.2.8",
-    "versions": "10.4.1",
-    "vitest": "0.28.4"
+    "eslint": "8.44.0",
+    "eslint-config-silverwind": "73.1.2",
+    "updates": "14.3.2",
+    "versions": "11.0.1",
+    "vitest": "0.33.0",
+    "vitest-config-silverwind": "2.1.0"
   }
 }
