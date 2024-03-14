@@ -8,10 +8,10 @@
 ```js
 import {caa, caaMatches} from "caa";
 
-await caa("subdomain.example.com");
+await caa("example.com");
 // => [{flags: 0, tag: 'issue', value: 'letsencrypt.org', issuerCritical: false}]
 
-await caa.matches("subdomain.example.com", "letsencrypt.org");
+await caa.matches("example.com", "letsencrypt.org");
 // => true
 
 ```
