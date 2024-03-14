@@ -51,7 +51,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
 
   // parse DNS answers to {type: [{name, data}]}
   const records = {};
-  if (res && res.answers && res.answers.length) {
+  if (res?.answers?.length) {
     for (const {name, type, data} of res.answers || {}) {
       if (!name || !type || !data) continue;
       if (!records[type]) records[type] = [];
@@ -60,22 +60,22 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   }
 
   // If CAA(X) is not empty, R(X) = CAA (X)
-  if (records.CAA && records.CAA.length) {
+  if (records.CAA?.length) {
     const caas = records.CAA.filter(record => record.name === name).map(record => record.data);
     if (caas.length) return caas;
   }
 
   let alias;
-  if (records.CNAME && records.CNAME.length) {
+  if (records.CNAME?.length) {
     const dest = records.CNAME.find(record => record.name === name);
     alias = dest.data;
-  } else if (records.DNAME && records.DNAME.length) {
+  } else if (records.DNAME?.length) {
     const dest = records.DNAME.find(record => record.name === name);
     alias = name.replace(dest.name, dest.data);
   }
 
   // If A(X) is not null, and CAA(A(X)) is not empty, then R(X) = CAA(A(X)), otherwise
-  if (alias && records.CAA && records.CAA.length) {
+  if (alias && records.CAA?.length) {
     return records.CAA.filter(record => record.name === alias && record.data).map(record => record.data);
   }
 
@@ -94,7 +94,7 @@ export async function caa(name, opts = {}) {
 
   if (!opts.servers) {
     const systemServers = getServers();
-    opts.servers = (systemServers && systemServers.length) ? systemServers : defaults.servers;
+    opts.servers = systemServers?.length ? systemServers : defaults.servers;
   }
 
   opts = {...defaults, ...opts};
@@ -127,10 +127,10 @@ export async function caaMatches(name, ca, opts = {}) {
   if (!caas.length) return true;
 
   const issueNames = caas
-    .filter(caa => caa && caa.tag === "issue")
+    .filter(caa => caa?.tag === "issue")
     .map(name => normalizeName(name.value.split(";")[0].trim()));
   const issueWildNames = caas
-    .filter(caa => caa && caa.tag === "issuewild")
+    .filter(caa => caa?.tag === "issuewild")
     .map(name => normalizeName(name.value.split(";")[0].trim()));
 
   const names = isWildcard(name) ? (issueWildNames.length ? issueWildNames : issueNames) : issueNames;
