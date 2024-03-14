@@ -5,9 +5,6 @@
 
 ## Usage
 
-```sh
-npm i caa
-```
 ```js
 import {caa, caaMatches} from "caa";
 
