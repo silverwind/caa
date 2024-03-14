@@ -1,5 +1,5 @@
 # caa
-[![](https://img.shields.io/npm/v/caa.svg?style=flat)](https://www.npmjs.org/package/caa) [![](https://img.shields.io/npm/dm/caa.svg)](https://www.npmjs.org/package/caa)
+[![](https://img.shields.io/npm/v/caa.svg?style=flat)](https://www.npmjs.org/package/caa) [![](https://img.shields.io/npm/dm/caa.svg)](https://www.npmjs.org/package/caa) [![](https://packagephobia.com/badge?p=caa)](https://packagephobia.com/result?p=caa)
 
 > [rfc6844](https://tools.ietf.org/html/rfc6844)-conform CAA record lookup and validation
 
