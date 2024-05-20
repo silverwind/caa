@@ -1,7 +1,7 @@
 import {getServers} from "node:dns";
 import {promisify} from "node:util";
 import dnsSocket from "dns-socket";
-import tlds from "tlds";
+import tlds from "tlds" with { type: 'json' };
 
 const defaults = {
   ignoreTLDs: false,
