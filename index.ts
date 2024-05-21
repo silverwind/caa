@@ -22,12 +22,15 @@ const defaults: CaaOpts = {
 };
 
 const tldSet = new Set(tlds);
-const isTLD = name => tldSet.has(name);
-const isWildcard = name => /\*/.test(name);
-const parent = name => name.split(".").splice(1).join(".");
-const selectServer = (servers, retries, tries) => servers[(tries - retries) % servers.length];
+const isTLD = (name: string) => tldSet.has(name);
+const isWildcard = (name: string) => /\*/.test(name);
+const parent = (name: string) => name.split(".").splice(1).join(".");
 
-function normalizeName(name = "") {
+function selectServer(servers: string[], retries: number, tries: number) {
+  return servers[(tries - retries) % servers.length];
+}
+
+function normalizeName(name: string = "") {
   name = name.toLowerCase();
   return (name.endsWith(".") && name.length > 1) ? name.substring(0, name.length - 1) : name;
 }
@@ -45,6 +48,13 @@ type ResolveOpts = {
 
 type Records = {
   [type: string]: any,
+}
+
+type CaaRecord = {
+  flags: number
+  tag: string,
+  value: string,
+  issuerCritical: boolean,
 }
 
 // resolve a CAA record, possibly via recursion
@@ -112,8 +122,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   }
 };
 
-export async function caa(name, opts: CaaOpts = {}) {
-  if (typeof name !== "string") throw new Error(`Expected a string for 'name', got ${name}`);
+export async function caa(name: string, opts: CaaOpts = {}): Promise<CaaRecord[]> {
   name = normalizeName(name);
 
   if (!opts.servers) {
@@ -126,7 +135,7 @@ export async function caa(name, opts: CaaOpts = {}) {
   const socket = opts.dnsSocket || dnsSocket();
   const query = promisify(socket.query.bind(socket));
 
-  const caa = await resolve({
+  const caa: CaaRecord[] = await resolve({
     name,
     query,
     servers: opts.servers,
@@ -141,10 +150,7 @@ export async function caa(name, opts: CaaOpts = {}) {
   return caa || [];
 }
 
-export async function caaMatches(name, ca, opts = {}) {
-  if (typeof name !== "string") throw new Error(`Expected a string for 'name', got ${name}`);
-  if (typeof ca !== "string") throw new Error(`Expected a string for 'ca', got ${ca}`);
-
+export async function caaMatches(name: string, ca: string, opts: CaaOpts = {}): Promise<boolean> {
   name = normalizeName(name);
   ca = normalizeName(ca);
 
