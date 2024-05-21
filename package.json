@@ -21,8 +21,6 @@
     "tlds": "^1.252.0"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "7.24.5",
-    "@babel/plugin-syntax-import-assertions": "7.24.1",
     "@types/node": "20.12.12",
     "eslint": "8.57.0",
     "eslint-config-silverwind": "85.1.3",
