@@ -1,14 +1,4 @@
 root: true
-extends: silverwind
-
-ignorePatterns:
- - /bin/
-
-# for import attributes - https://stackoverflow.com/questions/71090960
-parser: "@babel/eslint-parser"
-parserOptions:
- requireConfigFile: false
- babelOptions:
-   plugins:
-     - "@babel/plugin-syntax-import-assertions"
-
+extends:
+  - silverwind
+  - silverwind-typescript

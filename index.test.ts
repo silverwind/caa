@@ -1,4 +1,4 @@
-import {caa, caaMatches} from "./index.js";
+import {caa, caaMatches} from "./index.ts";
 
 test("tests", async () => {
   const tests = [

@@ -1,9 +1,18 @@
 import {getServers} from "node:dns";
 import {promisify} from "node:util";
 import dnsSocket from "dns-socket";
-import tlds from "tlds" with { type: "json" };
+import tlds from "tlds" with {type: "json"};
 
-const defaults = {
+type CaaOpts = {
+  ignoreTLDs?: boolean,
+  recursions?: number,
+  retries?: number,
+  port?: number,
+  servers?: string[],
+  dnsSocket?: any,
+}
+
+const defaults: CaaOpts = {
   ignoreTLDs: false,
   recursions: 50,
   retries: 12,
@@ -23,8 +32,23 @@ function normalizeName(name = "") {
   return (name.endsWith(".") && name.length > 1) ? name.substring(0, name.length - 1) : name;
 }
 
+type ResolveOpts = {
+  name: string,
+  query: Function,
+  servers: string[],
+  port: number,
+  recursions: number,
+  retries: number,
+  tries: number,
+  ignoreTLDs: boolean,
+}
+
+type Records = {
+  [type: string]: any,
+}
+
 // resolve a CAA record, possibly via recursion
-const resolve = async ({name, query, servers, port, recursions, retries, tries, ignoreTLDs}) => {
+const resolve = async ({name, query, servers, port, recursions, retries, tries, ignoreTLDs}: ResolveOpts) => {
   name = normalizeName(name);
   if (!name) return [];
   if (ignoreTLDs && isTLD(name)) return [];
@@ -50,7 +74,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   }
 
   // parse DNS answers to {type: [{name, data}]}
-  const records = {};
+  const records: Records = {};
   if (res?.answers?.length) {
     for (const {name, type, data} of res.answers || {}) {
       if (!name || !type || !data) continue;
@@ -88,7 +112,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   }
 };
 
-export async function caa(name, opts = {}) {
+export async function caa(name, opts: CaaOpts = {}) {
   if (typeof name !== "string") throw new Error(`Expected a string for 'name', got ${name}`);
   name = normalizeName(name);
 
@@ -103,7 +127,8 @@ export async function caa(name, opts = {}) {
   const query = promisify(socket.query.bind(socket));
 
   const caa = await resolve({
-    name, query,
+    name,
+    query,
     servers: opts.servers,
     port: opts.port,
     recursions: opts.recursions,
