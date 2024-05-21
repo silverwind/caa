@@ -11,9 +11,8 @@ import {caa, caaMatches} from "caa";
 await caa("example.com");
 // => [{flags: 0, tag: 'issue', value: 'letsencrypt.org', issuerCritical: false}]
 
-await caa.matches("example.com", "letsencrypt.org");
+await caaMatches("example.com", "letsencrypt.org");
 // => true
-
 ```
 
 ## API
