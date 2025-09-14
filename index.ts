@@ -10,7 +10,7 @@ type CaaOpts = {
   port?: number,
   servers?: string[],
   dnsSocket?: any,
-}
+};
 
 const defaults: CaaOpts = {
   ignoreTLDs: false,
@@ -23,7 +23,7 @@ const defaults: CaaOpts = {
 
 const tldSet = new Set(tlds);
 const isTLD = (name: string) => tldSet.has(name);
-const isWildcard = (name: string) => /\*/.test(name);
+const isWildcard = (name: string) => name.includes("*");
 const parent = (name: string) => name.split(".").splice(1).join(".");
 
 function selectServer(servers: string[], retries: number, tries: number) {
@@ -44,18 +44,18 @@ type ResolveOpts = {
   retries: number,
   tries: number,
   ignoreTLDs: boolean,
-}
+};
 
 type Records = {
   [type: string]: any,
-}
+};
 
 type CaaRecord = {
   flags: number
   tag: string,
   value: string,
   issuerCritical: boolean,
-}
+};
 
 // resolve a CAA record, possibly via recursion
 const resolve = async ({name, query, servers, port, recursions, retries, tries, ignoreTLDs}: ResolveOpts) => {

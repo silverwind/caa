@@ -20,17 +20,18 @@
     "dns-socket": "^4.2.2"
   },
   "devDependencies": {
-    "@types/node": "20.12.12",
-    "eslint": "8.57.0",
-    "eslint-config-silverwind": "85.1.4",
-    "eslint-config-silverwind-typescript": "3.2.7",
-    "tlds": "1.252.0",
-    "typescript-config-silverwind": "4.3.2",
-    "updates": "16.1.1",
-    "versions": "12.1.1",
-    "vite": "5.2.11",
-    "vite-config-silverwind": "2.1.0",
-    "vitest": "1.6.0",
-    "vitest-config-silverwind": "9.0.6"
+    "@types/node": "24.4.0",
+    "eslint": "9.35.0",
+    "eslint-config-silverwind": "103.0.4",
+    "eslint-config-silverwind-typescript": "9.2.2",
+    "tlds": "1.260.0",
+    "typescript-config-silverwind": "10.0.1",
+    "updates": "16.7.2",
+    "versions": "13.1.1",
+    "vite": "7.1.5",
+    "vite-config-silverwind": "5.5.0",
+    "vite-plugin-dts": "4.5.4",
+    "vitest": "3.2.4",
+    "vitest-config-silverwind": "10.2.0"
   }
 }
