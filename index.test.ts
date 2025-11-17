@@ -1,7 +1,7 @@
-import {caa, caaMatches} from "./index.ts";
+import {caa, caaMatches, type CaaRecord} from "./index.ts";
 
 test("tests", async () => {
-  const tests = [
+  const tests: Array<{promise: ReturnType<typeof caa | typeof caaMatches>, expect: boolean | ((records: Array<CaaRecord>) => boolean)}> = [
     {promise: caa("silverwind.io"), expect: records => records.map(r => r.value).includes("letsencrypt.org")},
     {promise: caa("sub.silverwind.io"), expect: records => records.map(r => r.value).includes("letsencrypt.org")},
     {promise: caa("caa-multi.silverwind.io"), expect: records => records.length > 1},
@@ -21,10 +21,10 @@ test("tests", async () => {
     {promise: caaMatches("cname-caa-multi.silverwind.io", "second.com"), expect: true},
   ];
 
-  for (const [i, result] of Object.entries(await Promise.all(tests.map(test => test.promise)))) {
+  for (const [i, result] of (await Promise.all(tests.map(test => test.promise))).entries()) {
     const expected = tests[i].expect;
     if (typeof expected === "function") {
-      expect(expected(result)).toBeTruthy();
+      expect(expected(result as Array<CaaRecord>)).toBeTruthy();
     } else {
       expect(result).toEqual(expected);
     }

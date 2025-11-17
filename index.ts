@@ -8,7 +8,7 @@ type CaaOpts = {
   recursions?: number,
   retries?: number,
   port?: number,
-  servers?: string[],
+  servers?: Array<string>,
   dnsSocket?: any,
 };
 
@@ -26,7 +26,7 @@ const isTLD = (name: string) => tldSet.has(name);
 const isWildcard = (name: string) => name.includes("*");
 const parent = (name: string) => name.split(".").splice(1).join(".");
 
-function selectServer(servers: string[], retries: number, tries: number) {
+function selectServer(servers: Array<string>, retries: number, tries: number) {
   return servers[(tries - retries) % servers.length];
 }
 
@@ -38,19 +38,22 @@ function normalizeName(name: string = "") {
 type ResolveOpts = {
   name: string,
   query: Function,
-  servers: string[],
+  servers: Array<string>,
   port: number,
   recursions: number,
   retries: number,
-  tries: number,
+  tries?: number,
   ignoreTLDs: boolean,
 };
 
 type Records = {
-  [type: string]: any,
+  [type: string]: Array<{
+    name: string;
+    data: any,
+  }>,
 };
 
-type CaaRecord = {
+export type CaaRecord = {
   flags: number
   tag: string,
   value: string,
@@ -70,7 +73,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
 
   let res;
   try {
-    res = await query({questions: [{name, type: "CAA"}]}, port, selectServer(servers, retries, tries));
+    res = await query({questions: [{name, type: "CAA"}]}, port, selectServer(servers, retries, tries!));
   } catch {
     if (retries <= 0) return [];
     retries -= 1;
@@ -102,10 +105,10 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   let alias;
   if (records.CNAME?.length) {
     const dest = records.CNAME.find(record => record.name === name);
-    alias = dest.data;
+    if (dest) alias = dest.data;
   } else if (records.DNAME?.length) {
     const dest = records.DNAME.find(record => record.name === name);
-    alias = name.replace(dest.name, dest.data);
+    if (dest) alias = name.replace(dest.name, dest.data);
   }
 
   // If A(X) is not null, and CAA(A(X)) is not empty, then R(X) = CAA(A(X)), otherwise
@@ -122,7 +125,7 @@ const resolve = async ({name, query, servers, port, recursions, retries, tries, 
   }
 };
 
-export async function caa(name: string, opts: CaaOpts = {}): Promise<CaaRecord[]> {
+export async function caa(name: string, opts: CaaOpts = {}): Promise<Array<CaaRecord>> {
   name = normalizeName(name);
 
   if (!opts.servers) {
@@ -135,15 +138,15 @@ export async function caa(name: string, opts: CaaOpts = {}): Promise<CaaRecord[]
   const socket = opts.dnsSocket || dnsSocket();
   const query = promisify(socket.query.bind(socket));
 
-  const caa: CaaRecord[] = await resolve({
+  const caa: Array<CaaRecord> = await resolve({
     name,
     query,
-    servers: opts.servers,
-    port: opts.port,
-    recursions: opts.recursions,
-    retries: opts.retries,
-    tries: opts.retries,
-    ignoreTLDs: opts.ignoreTLDs,
+    servers: opts.servers!,
+    port: opts.port!,
+    recursions: opts.recursions!,
+    retries: opts.retries!,
+    tries: opts.retries!,
+    ignoreTLDs: opts.ignoreTLDs!,
   });
 
   if (!opts.dnsSocket) socket.destroy();
