@@ -37,7 +37,7 @@ function normalizeName(name: string = "") {
 
 type ResolveOpts = {
   name: string,
-  query: Function,
+  query: any,
   servers: Array<string>,
   port: number,
   recursions: number,
