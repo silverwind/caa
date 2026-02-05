@@ -25,6 +25,7 @@
     "eslint": "9.39.2",
     "eslint-config-silverwind": "120.0.0",
     "eslint-config-silverwind-typescript": "9.2.2",
+    "jest-extended": "7.0.0",
     "tlds": "1.261.0",
     "typescript": "5.9.3",
     "typescript-config-silverwind": "14.0.0",
