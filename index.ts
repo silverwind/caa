@@ -107,6 +107,6 @@ export async function caaMatches(name: string, ca: string, opts: CaaOpts = {}): 
     else if (r.tag === "issuewild") issueWildNames.push(normalizeName(r.value.split(";")[0].trim()));
   }
 
-  const names = wildcard ? (issueWildNames.length ? issueWildNames : issueNames) : issueNames;
+  const names = wildcard && issueWildNames.length ? issueWildNames : issueNames;
   return !names.length || names.includes(ca);
 }
