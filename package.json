@@ -3,7 +3,10 @@
   "version": "11.0.1",
   "description": "rfc8659-conform CAA record lookup and validation",
   "author": "silverwind <me@silverwind.io>",
-  "repository": "silverwind/caa",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/silverwind/caa.git"
+  },
   "license": "BSD-2-Clause",
   "type": "module",
   "sideEffects": false,
