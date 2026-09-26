@@ -92,13 +92,14 @@ export async function caaMatches(name: string, ca: string, opts: CaaOpts = {}): 
   if (!records.length) return true;
 
   // RFC 8659 §4.5: an unknown Property tag with the critical flag forbids all issuance.
-  if (records.some(r => r.issuerCritical && !knownTags.has(r.tag))) return false;
+  if (records.some(r => r.issuerCritical && !knownTags.has(r.tag.toLowerCase()))) return false;
 
   const issueNames: Array<string> = [];
   const issueWildNames: Array<string> = [];
   for (const r of records) {
-    if (r.tag === "issue") issueNames.push(normalizeName(r.value.split(";")[0].trim()));
-    else if (r.tag === "issuewild") issueWildNames.push(normalizeName(r.value.split(";")[0].trim()));
+    const tag = r.tag.toLowerCase();
+    if (tag === "issue") issueNames.push(normalizeName(r.value.split(";")[0].trim()));
+    else if (tag === "issuewild") issueWildNames.push(normalizeName(r.value.split(";")[0].trim()));
   }
 
   const names = wildcard && issueWildNames.length ? issueWildNames : issueNames;

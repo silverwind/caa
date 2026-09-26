@@ -41,6 +41,7 @@ const zone: Zone = {
   "critical-iodef.example.com": [critical("iodef", "mailto:security@example.com"), issue("letsencrypt.org")],
   "critical-accounturi.example.com": [critical("accounturi", "https://acme.example.com/account/123"), issue("letsencrypt.org")],
   "critical-validationmethods.example.com": [critical("validationmethods", "http-01"), issue("letsencrypt.org")],
+  "critical-uppercase.example.com": [critical("ISSUE", "letsencrypt.org")],
   "star-mid.example.com": [issue("letsencrypt.org")],
 };
 
@@ -72,6 +73,8 @@ test("tests", async () => {
     {promise: caaMatches("critical-iodef.example.com", "letsencrypt.org", opts), expect: true},
     {promise: caaMatches("critical-accounturi.example.com", "letsencrypt.org", opts), expect: true},
     {promise: caaMatches("critical-validationmethods.example.com", "letsencrypt.org", opts), expect: true},
+    {promise: caaMatches("critical-uppercase.example.com", "letsencrypt.org", opts), expect: true},
+    {promise: caaMatches("critical-uppercase.example.com", "other.org", opts), expect: false},
     {promise: caaMatches("star-mid.example.com", "letsencrypt.org", opts), expect: true},
   ];
 
