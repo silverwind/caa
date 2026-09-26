@@ -1,91 +1,82 @@
 import {caa, caaMatches, type CaaRecord} from "./index.ts";
 
-type CaaData = {flags: number, tag: string, value: string};
-type Zone = Record<string, Array<CaaData> | undefined>;
-
 const servfailServer = "127.0.0.2";
+const record = (tag: string, value: string, flags = 0) => ({flags, tag, value, issuerCritical: Boolean(flags & 0x80)});
+const critical = (tag: string, value: string) => record(tag, value, 0x80);
+const le = record("issue", "letsencrypt.org");
+const multi = [record("issue", "first.com"), record("issue", "second.com")];
+const none = [record("issue", ";")];
 
-function makeStub(zone: Zone) {
-  return {
-    query(packet: any, _port: number, server: string, cb: (err: unknown, res: unknown) => void) {
-      if (server === servfailServer) return cb(null, {rcode: "SERVFAIL", answers: []});
-      const name = packet.questions[0].name;
-      const records = zone[name] ?? [];
-      cb(null, {
-        rcode: "NOERROR",
-        answers: records.map(r => ({
-          name,
-          type: "CAA",
-          data: {...r, issuerCritical: Boolean(r.flags & 0x80)},
-        })),
-      });
-    },
-  };
-}
-
-const issue = (value: string): CaaData => ({flags: 0, tag: "issue", value});
-const issueWild = (value: string): CaaData => ({flags: 0, tag: "issuewild", value});
-const critical = (tag: string, value: string): CaaData => ({flags: 0x80, tag, value});
-
-const multi = [issue("first.com"), issue("second.com")];
-const zone: Zone = {
-  "silverwind.io": [issue("letsencrypt.org")],
+const zone: Record<string, Array<CaaRecord> | undefined> = {
+  "silverwind.io": [le],
   "caa-multi.silverwind.io": multi,
   "cname-caa-multi.silverwind.io": multi,
-  "caa-none.silverwind.io": [issue(";")],
-  "caa-wild.silverwind.io": [issue("letsencrypt.org"), issueWild(";")],
-  "caa-none-cname.silverwind.io": [issue(";")],
-  "caa-cname.silverwind.io": [issue("letsencrypt.org")],
-  "xn--r8jz45g.com": [issue("letsencrypt.org")],
-  "xn--p1ai": [issue("letsencrypt.org")],
+  "caa-none.silverwind.io": none,
+  "caa-wild.silverwind.io": [le, record("issuewild", ";")],
+  "caa-none-cname.silverwind.io": none,
+  "caa-cname.silverwind.io": [le],
+  "xn--r8jz45g.com": [le],
+  "xn--p1ai": [le],
   "critical-unknown.example.com": [critical("futureproperty", "anything")],
-  "critical-iodef.example.com": [critical("iodef", "mailto:security@example.com"), issue("letsencrypt.org")],
-  "critical-accounturi.example.com": [critical("accounturi", "https://acme.example.com/account/123"), issue("letsencrypt.org")],
-  "critical-validationmethods.example.com": [critical("validationmethods", "http-01"), issue("letsencrypt.org")],
+  "critical-iodef.example.com": [critical("iodef", "mailto:security@example.com"), le],
+  "critical-accounturi.example.com": [critical("accounturi", "https://acme.example.com/account/123"), le],
+  "critical-validationmethods.example.com": [critical("validationmethods", "http-01"), le],
   "critical-uppercase.example.com": [critical("ISSUE", "letsencrypt.org")],
-  "star-mid.example.com": [issue("letsencrypt.org")],
+  "star-mid.example.com": [le],
 };
 
-const opts = {dnsSocket: makeStub(zone), servers: ["127.0.0.1"]};
+const opts = {
+  servers: ["127.0.0.1"],
+  dnsSocket: {
+    query({questions: [{name}]}: any, _port: number, server: string, cb: (err: null, res: unknown) => void) {
+      cb(null, server === servfailServer ? {rcode: "SERVFAIL", answers: []} : {
+        rcode: "NOERROR",
+        answers: (zone[name] ?? []).map(data => ({name, type: "CAA", data: {...data}})),
+      });
+    },
+  },
+};
 
-test("tests", async () => {
-  const tests: Array<{promise: ReturnType<typeof caa | typeof caaMatches>, expect: boolean | ((records: Array<CaaRecord>) => boolean)}> = [
-    {promise: caa("silverwind.io", opts), expect: r => r.some(rec => rec.value === "letsencrypt.org")},
-    {promise: caa("sub.silverwind.io", opts), expect: r => r.some(rec => rec.value === "letsencrypt.org")},
-    {promise: caa("caa-multi.silverwind.io", opts), expect: r => r.length === 2},
-    {promise: caa("cname-caa-multi.silverwind.io", opts), expect: r => r.length === 2},
-    {promise: caaMatches("silverwind.io", "letsencrypt.org", opts), expect: true},
-    {promise: caaMatches("sub.silverwind.io", "letsencrypt.org", opts), expect: true},
-    {promise: caaMatches("caa-none.silverwind.io", "letsencrypt.org", opts), expect: false},
-    {promise: caaMatches("sub.caa-none.silverwind.io", "letsencrypt.org", opts), expect: false},
-    {promise: caaMatches("caa-none.silverwind.io", "letsencrypt.org", {...opts, servers: [servfailServer, "127.0.0.1"]}), expect: false},
-    {promise: caaMatches("caa-wild.silverwind.io", "letsencrypt.org", opts), expect: true},
-    {promise: caaMatches("*.caa-wild.silverwind.io", "letsencrypt.org", opts), expect: false},
-    {promise: caaMatches("sub.caa-wild.silverwind.io", "letsencrypt.org", opts), expect: true},
-    {promise: caaMatches("caa-none-cname.silverwind.io", "letsencrypt.org", opts), expect: false},
-    {promise: caaMatches("caa-cname.silverwind.io", "letsencrypt.org", opts), expect: true},
-    {promise: caaMatches("caa-multi.silverwind.io", "first.com", opts), expect: true},
-    {promise: caaMatches("caa-multi.silverwind.io", "second.com", opts), expect: true},
-    {promise: caaMatches("cname-caa-multi.silverwind.io", "first.com", opts), expect: true},
-    {promise: caaMatches("cname-caa-multi.silverwind.io", "second.com", opts), expect: true},
-    {promise: caa("例え.com", opts), expect: r => r.length === 1 && r[0].value === "letsencrypt.org"},
-    {promise: caaMatches("例え.com", "letsencrypt.org", opts), expect: true},
-    {promise: caa("пример.рф", {...opts, ignoreTLDs: true}), expect: r => r.length === 0},
-    {promise: caaMatches("critical-unknown.example.com", "letsencrypt.org", opts), expect: false},
-    {promise: caaMatches("critical-iodef.example.com", "letsencrypt.org", opts), expect: true},
-    {promise: caaMatches("critical-accounturi.example.com", "letsencrypt.org", opts), expect: true},
-    {promise: caaMatches("critical-validationmethods.example.com", "letsencrypt.org", opts), expect: true},
-    {promise: caaMatches("critical-uppercase.example.com", "letsencrypt.org", opts), expect: true},
-    {promise: caaMatches("critical-uppercase.example.com", "other.org", opts), expect: false},
-    {promise: caaMatches("star-mid.example.com", "letsencrypt.org", opts), expect: true},
-  ];
+test.each([
+  ["silverwind.io", [le]],
+  ["sub.silverwind.io", [le]],
+  ["caa-multi.silverwind.io", multi],
+  ["cname-caa-multi.silverwind.io", multi],
+  ["例え.com", [le]],
+])("caa(%s)", async (name, expected) => {
+  expect(await caa(name, opts)).toEqual(expected);
+});
 
-  for (const [i, result] of (await Promise.all(tests.map(test => test.promise))).entries()) {
-    const expected = tests[i].expect;
-    if (typeof expected === "function") {
-      expect(expected(result as Array<CaaRecord>)).toBeTruthy();
-    } else {
-      expect(result).toEqual(expected);
-    }
-  }
+test("caa with ignoreTLDs skips IDN TLD records", async () => {
+  expect(await caa("пример.рф", {...opts, ignoreTLDs: true})).toEqual([]);
+});
+
+test("caaMatches retries SERVFAIL on the next server instead of climbing", async () => {
+  expect(await caaMatches("caa-none.silverwind.io", "letsencrypt.org", {...opts, servers: [servfailServer, "127.0.0.1"]})).toBe(false);
+});
+
+test.each([
+  ["silverwind.io", "letsencrypt.org", true],
+  ["sub.silverwind.io", "letsencrypt.org", true],
+  ["caa-none.silverwind.io", "letsencrypt.org", false],
+  ["sub.caa-none.silverwind.io", "letsencrypt.org", false],
+  ["caa-wild.silverwind.io", "letsencrypt.org", true],
+  ["*.caa-wild.silverwind.io", "letsencrypt.org", false],
+  ["sub.caa-wild.silverwind.io", "letsencrypt.org", true],
+  ["caa-none-cname.silverwind.io", "letsencrypt.org", false],
+  ["caa-cname.silverwind.io", "letsencrypt.org", true],
+  ["caa-multi.silverwind.io", "first.com", true],
+  ["caa-multi.silverwind.io", "second.com", true],
+  ["cname-caa-multi.silverwind.io", "first.com", true],
+  ["cname-caa-multi.silverwind.io", "second.com", true],
+  ["例え.com", "letsencrypt.org", true],
+  ["critical-unknown.example.com", "letsencrypt.org", false],
+  ["critical-iodef.example.com", "letsencrypt.org", true],
+  ["critical-accounturi.example.com", "letsencrypt.org", true],
+  ["critical-validationmethods.example.com", "letsencrypt.org", true],
+  ["critical-uppercase.example.com", "letsencrypt.org", true],
+  ["critical-uppercase.example.com", "other.org", false],
+  ["star-mid.example.com", "letsencrypt.org", true],
+])("caaMatches(%s, %s) is %j", async (name, ca, expected) => {
+  expect(await caaMatches(name, ca, opts)).toBe(expected);
 });
