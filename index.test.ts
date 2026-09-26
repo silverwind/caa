@@ -24,8 +24,6 @@ const issue = (value: string): CaaData => ({flags: 0, tag: "issue", value});
 const issueWild = (value: string): CaaData => ({flags: 0, tag: "issuewild", value});
 const critical = (tag: string, value: string): CaaData => ({flags: 0x80, tag, value});
 
-// Resolver chases CNAMEs and returns the target's CAA records under the queried name —
-// see RFC 8659 §7. Stub mirrors that for cname-* entries.
 const multi = [issue("first.com"), issue("second.com")];
 const zone: Zone = {
   "silverwind.io": [issue("letsencrypt.org")],
@@ -47,8 +45,8 @@ const opts = {dnsSocket: makeStub(zone), servers: ["127.0.0.1"]};
 
 test("tests", async () => {
   const tests: Array<{promise: ReturnType<typeof caa | typeof caaMatches>, expect: boolean | ((records: Array<CaaRecord>) => boolean)}> = [
-    {promise: caa("silverwind.io", opts), expect: r => r.map(rec => rec.value).includes("letsencrypt.org")},
-    {promise: caa("sub.silverwind.io", opts), expect: r => r.map(rec => rec.value).includes("letsencrypt.org")},
+    {promise: caa("silverwind.io", opts), expect: r => r.some(rec => rec.value === "letsencrypt.org")},
+    {promise: caa("sub.silverwind.io", opts), expect: r => r.some(rec => rec.value === "letsencrypt.org")},
     {promise: caa("caa-multi.silverwind.io", opts), expect: r => r.length === 2},
     {promise: caa("cname-caa-multi.silverwind.io", opts), expect: r => r.length === 2},
     {promise: caaMatches("silverwind.io", "letsencrypt.org", opts), expect: true},
@@ -64,20 +62,12 @@ test("tests", async () => {
     {promise: caaMatches("caa-multi.silverwind.io", "second.com", opts), expect: true},
     {promise: caaMatches("cname-caa-multi.silverwind.io", "first.com", opts), expect: true},
     {promise: caaMatches("cname-caa-multi.silverwind.io", "second.com", opts), expect: true},
-
-    // IDN: U-label resolves to A-label
     {promise: caa("例え.com", opts), expect: r => r.length === 1 && r[0].value === "letsencrypt.org"},
     {promise: caaMatches("例え.com", "letsencrypt.org", opts), expect: true},
-
-    // RFC 8659 §4.5: unknown property tag with the critical flag forbids issuance
     {promise: caaMatches("critical-unknown.example.com", "letsencrypt.org", opts), expect: false},
-
-    // Critical flag on tags the library recognizes is not a denial
     {promise: caaMatches("critical-iodef.example.com", "letsencrypt.org", opts), expect: true},
     {promise: caaMatches("critical-accounturi.example.com", "letsencrypt.org", opts), expect: true},
     {promise: caaMatches("critical-validationmethods.example.com", "letsencrypt.org", opts), expect: true},
-
-    // isWildcard requires a literal "*." prefix — middle-asterisk is not a wildcard
     {promise: caaMatches("star-mid.example.com", "letsencrypt.org", opts), expect: true},
   ];
 

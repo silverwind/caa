@@ -28,7 +28,7 @@ const isTLD = (name: string) => tldSet.has(name);
 const isWildcard = (name: string) => name.startsWith("*.");
 const parent = (name: string) => name.split(".").slice(1).join(".");
 
-function normalizeName(name: string = "") {
+function normalizeName(name = "") {
   const wildcard = isWildcard(name);
   const base = wildcard ? name.slice(2) : name;
   let ascii = domainToASCII(base) || base.toLowerCase();
@@ -48,18 +48,12 @@ export async function caa(name: string, opts: CaaOpts = {}): Promise<Array<CaaRe
   const recursions = opts.recursions ?? defaults.recursions;
   const retries = opts.retries ?? defaults.retries;
   const port = opts.port ?? defaults.port;
-  let servers: Array<string>;
-  if (opts.servers?.length) {
-    servers = opts.servers;
-  } else {
-    const sys = getServers();
-    servers = sys.length ? sys : defaults.servers;
-  }
+  let servers = opts.servers?.length ? opts.servers : getServers();
+  if (!servers.length) servers = defaults.servers;
   const socket = opts.dnsSocket || dnsSocket();
   const query = promisify(socket.query.bind(socket));
 
-  // RFC 8659 §3: query CAA at the FQDN; if empty, climb to the parent.
-  // CNAME/DNAME chasing is the recursive resolver's responsibility.
+  // RFC 8659 §3: climb to the parent when empty, the resolver chases CNAME/DNAME
   const climb = async (name: string, recursionsLeft: number, retriesLeft: number): Promise<Array<CaaRecord>> => {
     if (!name) return [];
     if (ignoreTLDs && isTLD(name)) return [];
