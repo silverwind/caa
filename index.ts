@@ -66,7 +66,7 @@ export async function caa(name: string, opts: CaaOpts = {}): Promise<Array<CaaRe
     } catch {
       res = null;
     }
-    if (!res || (!res.answers && !okRcodes.has(res.rcode))) {
+    if (!res || (!res.answers?.length && !okRcodes.has(res.rcode))) {
       return climb(name, recursionsLeft, retriesLeft - 1);
     }
 

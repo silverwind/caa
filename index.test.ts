@@ -3,9 +3,12 @@ import {caa, caaMatches, type CaaRecord} from "./index.ts";
 type CaaData = {flags: number, tag: string, value: string};
 type Zone = Record<string, Array<CaaData> | undefined>;
 
+const servfailServer = "127.0.0.2";
+
 function makeStub(zone: Zone) {
   return {
-    query(packet: any, _port: number, _server: string, cb: (err: unknown, res: unknown) => void) {
+    query(packet: any, _port: number, server: string, cb: (err: unknown, res: unknown) => void) {
+      if (server === servfailServer) return cb(null, {rcode: "SERVFAIL", answers: []});
       const name = packet.questions[0].name;
       const records = zone[name] ?? [];
       cb(null, {
@@ -53,6 +56,7 @@ test("tests", async () => {
     {promise: caaMatches("sub.silverwind.io", "letsencrypt.org", opts), expect: true},
     {promise: caaMatches("caa-none.silverwind.io", "letsencrypt.org", opts), expect: false},
     {promise: caaMatches("sub.caa-none.silverwind.io", "letsencrypt.org", opts), expect: false},
+    {promise: caaMatches("caa-none.silverwind.io", "letsencrypt.org", {...opts, servers: [servfailServer, "127.0.0.1"]}), expect: false},
     {promise: caaMatches("caa-wild.silverwind.io", "letsencrypt.org", opts), expect: true},
     {promise: caaMatches("*.caa-wild.silverwind.io", "letsencrypt.org", opts), expect: false},
     {promise: caaMatches("sub.caa-wild.silverwind.io", "letsencrypt.org", opts), expect: true},
