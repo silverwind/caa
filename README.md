@@ -22,7 +22,7 @@ await caaMatches("example.com", "letsencrypt.org");
 ## API
 ### `caa(name, [options])`
 
-Retrieve the CAA records which apply to `name`. Returns a [`CAA` object](https://github.com/mafintosh/dns-packet/#caa).
+Retrieve the CAA records which apply to `name`. Returns an array of [`CAA` objects](https://github.com/mafintosh/dns-packet/#caa).
 
 ### `caaMatches(name, ca, [options])`
 
