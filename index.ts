@@ -1,6 +1,6 @@
 import {getServers} from "node:dns";
 import {promisify} from "node:util";
-import {domainToASCII} from "node:url";
+import {domainToASCII, domainToUnicode} from "node:url";
 import dnsSocket from "dns-socket";
 import tlds from "tlds" with {type: "json"};
 
@@ -24,7 +24,7 @@ const defaults = {
 const tldSet = new Set(tlds);
 const knownTags = new Set(["issue", "issuewild", "iodef", "contactemail", "contactphone", "accounturi", "validationmethods"]);
 const okRcodes = new Set(["NXDOMAIN", "NOERROR"]);
-const isTLD = (name: string) => tldSet.has(name);
+const isTLD = (name: string) => tldSet.has(name.startsWith("xn--") ? domainToUnicode(name) : name);
 const isWildcard = (name: string) => name.startsWith("*.");
 const parent = (name: string) => name.split(".").slice(1).join(".");
 
